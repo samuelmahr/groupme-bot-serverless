@@ -1,0 +1,35 @@
+service: bball-groupme-bot
+package:
+  individually: true
+  exclude:
+    - config/**
+    - lambda_functions/**
+    - node_modules/**
+    - venv/**
+    - pylintrc
+    - "*.json"
+    - README.md
+    - requirements.txt
+    - .gitignore
+    - pytest.ini
+    - CHANGELOG.md
+    - tests/**
+
+provider:
+  name: aws
+  runtime: python3.7
+
+  stage: ${opt:stage, "prod"}
+  region: us-east-1
+
+functions: ${file(config/functions.yaml)}
+
+resources: ${file(config/resources.yaml)}
+
+plugins:
+  - serverless-python-requirements
+
+custom:
+  pythonRequirements:
+    dockerizePip: true
+    layer: true

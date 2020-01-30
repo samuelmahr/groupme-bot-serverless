@@ -64,10 +64,11 @@ def find_outgoing_text(incoming_text):
     for expected_phrase, translated_phrase in phrases.items():
         if expected_phrase.lower().translate(
                 str.maketrans('', '', string.punctuation)) == incoming_text.lower().translate(
-                str.maketrans('', '', string.punctuation)):
+            str.maketrans('', '', string.punctuation)):
             return translated_phrase
 
-        phrase_match_percentages.update({expected_phrase: calculate_match_percentage(expected_phrase, incoming_text)})
+        phrase_match_percentages.update(
+            {expected_phrase: calculate_match_percentage(expected_phrase, incoming_text, request_payload)})
 
         # sort percentages
         phrase_match_percentages = {k: v for k, v in
@@ -88,9 +89,13 @@ def build_phrases(lines):
     return phrases
 
 
-def calculate_match_percentage(expected_phrase, incoming_text):
+def calculate_match_percentage(expected_phrase, incoming_text, request_payload):
+    text = incoming_text
+    if request_payload['type'] == 'mentions':
+        text = incoming_text[:incoming_text['@']].strip()
+
     expected_words = set(expected_phrase.lower().translate(str.maketrans('', '', string.punctuation)).split(' '))
-    incoming_words = set(incoming_text.lower().translate(str.maketrans('', '', string.punctuation)).split(' '))
+    incoming_words = set(text.lower().translate(str.maketrans('', '', string.punctuation)).split(' '))
     percentage = len(expected_words.intersection(incoming_words)) / len(incoming_words) * 100
     if 80 <= percentage < 100:
         return percentage

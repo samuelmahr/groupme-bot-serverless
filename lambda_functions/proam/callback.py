@@ -27,7 +27,7 @@ def handler(event, context):
 def handle_detroit(request_payload):
     incoming_text = request_payload.get('text', '')
     LOGGER.info(f'Message: {request_payload}')
-    outgoing_text = find_outgoing_text(incoming_text)
+    outgoing_text = find_outgoing_text(incoming_text, request_payload)
     if outgoing_text:
         LOGGER.info('sending message')
         payload = {
@@ -49,7 +49,7 @@ def handle_detroit(request_payload):
     return {'message': 'no phrase found to translate'}
 
 
-def find_outgoing_text(incoming_text):
+def find_outgoing_text(incoming_text, request_payload):
     lines = list()
     with open('phrases/proam.txt', 'r') as phrases_file:
         lines.extend(phrases_file.readlines())
@@ -62,9 +62,8 @@ def find_outgoing_text(incoming_text):
 
     phrase_match_percentages = dict()
     for expected_phrase, translated_phrase in phrases.items():
-        if expected_phrase.lower().translate(
-                str.maketrans('', '', string.punctuation)) == incoming_text.lower().translate(
-            str.maketrans('', '', string.punctuation)):
+        if expected_phrase.lower().translate(str.maketrans('', '', string.punctuation)) == incoming_text.lower(
+        ).translate(str.maketrans('', '', string.punctuation)):
             return translated_phrase
 
         phrase_match_percentages.update(

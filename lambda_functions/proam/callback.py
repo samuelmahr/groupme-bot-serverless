@@ -90,7 +90,7 @@ def build_phrases(lines):
 
 def calculate_match_percentage(expected_phrase, incoming_text, request_payload):
     text = incoming_text
-    if request_payload['type'] == 'mentions':
+    if request_payload.get('type', '') == 'mentions':
         text = incoming_text[:incoming_text['@']].strip()
 
     expected_words = set(expected_phrase.lower().translate(str.maketrans('', '', string.punctuation)).split(' '))

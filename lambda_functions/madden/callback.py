@@ -20,13 +20,35 @@ LOGGER.setLevel(logging.INFO)
 def handler(event, context):
     request_payload = json.loads(event['body'])
     LOGGER.info(f'Message: {request_payload}')
+    sender_id = request_payload['sender_id']
+    if sender_id == '26901603':
+        return copy_paste_message(request_payload)
     if request_payload['sender_id'] == '6997876':
         return handle_brian(request_payload)
 
     return {'message': 'do nothing, it aint brian'}
 
 
-def handle_brian(request_payload):
+def copy_paste_message(request_payload: dict) -> dict:
+    incoming_text = request_payload.get('text', '')
+    payload = {
+        "bot_id": BOT_ID,
+        "text": incoming_text
+    }
+
+    headers = {
+        'Content-Type': 'application/json'
+    }
+
+    response = requests.post(GROUPME_URL, headers=headers, json=payload)
+    response.raise_for_status()
+
+    save_to_dynamo(incoming_text, incoming_text)
+
+    return {'message': 'copied message'}
+
+
+def handle_brian(request_payload: dict) -> dict:
     incoming_text = request_payload.get('text', '')
     LOGGER.info(f'Message: {request_payload}')
     outgoing_text = find_outgoing_text(incoming_text, request_payload)
@@ -34,7 +56,7 @@ def handle_brian(request_payload):
         LOGGER.info('sending message')
         payload = {
             "bot_id": BOT_ID,
-            "text": outgoing_text
+            "text": f'What Detroit is really saying is...\n\n{outgoing_text}'
         }
 
         headers = {
@@ -51,14 +73,14 @@ def handle_brian(request_payload):
     return {'message': 'no phrase found to translate'}
 
 
-def find_outgoing_text(incoming_text, request_payload):
+def find_outgoing_text(incoming_text: str, request_payload: dict) -> str:
     lines = list()
     with open('phrases/brian.txt', 'r') as phrases_file:
         lines.extend(phrases_file.readlines())
 
     if not lines:
         LOGGER.warning('Failure to read file')
-        return None
+        return ''
 
     phrases = build_phrases(lines)
 
@@ -78,10 +100,10 @@ def find_outgoing_text(incoming_text, request_payload):
         if winner[1] != 0:
             return phrases[winner[0]]
 
-    return None
+    return ''
 
 
-def build_phrases(lines):
+def build_phrases(lines: list) -> dict:
     phrases = dict()
     for line in lines:
         phrase = line.split(',')
@@ -90,7 +112,7 @@ def build_phrases(lines):
     return phrases
 
 
-def calculate_match_percentage(expected_phrase, incoming_text, request_payload):
+def calculate_match_percentage(expected_phrase: str, incoming_text: str, request_payload: dict) -> float:
     text = incoming_text
     if request_payload.get('type', '') == 'mentions':
         text = incoming_text[:incoming_text['@']].strip()

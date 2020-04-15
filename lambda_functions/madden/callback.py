@@ -3,6 +3,7 @@ import datetime
 import json
 import logging.config
 import os
+import random
 import string
 
 import boto3
@@ -23,10 +24,11 @@ def handler(event, context):
     sender_id = request_payload['sender_id']
     if sender_id == '26901603':
         return copy_paste_message(request_payload)
-    if request_payload['sender_id'] == '6997876':
-        return handle_brian(request_payload)
 
-    return {'message': 'do nothing, it aint brian'}
+    if sender_id == '6997876':
+        return handle_text_files(request_payload, 'brian.txt')
+
+    return handle_text_files(request_payload, 'madden.txt')
 
 
 def copy_paste_message(request_payload: dict) -> dict:
@@ -48,11 +50,12 @@ def copy_paste_message(request_payload: dict) -> dict:
     return {'message': 'copied message'}
 
 
-def handle_brian(request_payload: dict) -> dict:
+def handle_text_files(request_payload: dict, text_file: str) -> dict:
     incoming_text = request_payload.get('text', '')
     LOGGER.info(f'Message: {request_payload}')
-    outgoing_text = find_outgoing_text(incoming_text, request_payload)
+    outgoing_text = find_outgoing_text(incoming_text, request_payload, text_file)
     if outgoing_text:
+        text = outgoing_text if text_file != 'brian.txt' else f'What Detroit is really saying is...\n\n{outgoing_text}'
         LOGGER.info('sending message')
         payload = {
             "bot_id": BOT_ID,
@@ -73,9 +76,9 @@ def handle_brian(request_payload: dict) -> dict:
     return {'message': 'no phrase found to translate'}
 
 
-def find_outgoing_text(incoming_text: str, request_payload: dict) -> str:
+def find_outgoing_text(incoming_text: str, request_payload: dict, text_file: str) -> str:
     lines = list()
-    with open('phrases/brian.txt', 'r') as phrases_file:
+    with open(f'phrases/{text_file}', 'r') as phrases_file:
         lines.extend(phrases_file.readlines())
 
     if not lines:
@@ -107,7 +110,11 @@ def build_phrases(lines: list) -> dict:
     phrases = dict()
     for line in lines:
         phrase = line.split(',')
-        phrases.update({phrase[0]: phrase[1].strip()})
+        if '_' in phrase:
+            responses = phrase.split('_')
+            phrases.update({phrase[0]: random.choice(responses)})
+        else:
+            phrases.update({phrase[0]: phrase[1].strip()})
 
     return phrases
 

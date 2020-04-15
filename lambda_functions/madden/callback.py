@@ -32,22 +32,25 @@ def handler(event, context):
 
 
 def copy_paste_message(request_payload: dict) -> dict:
-    incoming_text = request_payload.get('text', '')
-    payload = {
-        "bot_id": BOT_ID,
-        "text": incoming_text
-    }
+    # let's provide a 33% chance for copying pasting messages so it's not spam
+    if random.choice([1, 2, 3]) % 3 == 0:
+        incoming_text = request_payload.get('text', '')
+        payload = {
+            "bot_id": BOT_ID,
+            "text": incoming_text
+        }
 
-    headers = {
-        'Content-Type': 'application/json'
-    }
+        headers = {
+            'Content-Type': 'application/json'
+        }
 
-    response = requests.post(GROUPME_URL, headers=headers, json=payload)
-    response.raise_for_status()
+        response = requests.post(GROUPME_URL, headers=headers, json=payload)
+        response.raise_for_status()
 
-    save_to_dynamo(incoming_text, incoming_text)
+        save_to_dynamo(incoming_text, incoming_text)
+        return {'message': 'copied message'}
 
-    return {'message': 'copied message'}
+    return {'message': 'did not copy message'}
 
 
 def handle_text_files(request_payload: dict, text_file: str) -> dict:

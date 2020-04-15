@@ -33,7 +33,8 @@ def handler(event, context):
 
 def copy_paste_message(request_payload: dict) -> dict:
     # let's provide a 33% chance for copying pasting messages so it's not spam
-    if random.choice([1, 2, 3]) % 3 == 0:
+    # it could be random.choice([1, 2, 3]) == 3 but i didn't feel like doing that
+    if random.choice([1, 2, 3, 4, 5, 6]) % 3 == 0:
         incoming_text = request_payload.get('text', '')
         payload = {
             "bot_id": BOT_ID,

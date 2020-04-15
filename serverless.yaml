@@ -15,6 +15,7 @@ package:
     - CHANGELOG.md
     - tests/**
     - bots.txt
+    - phrases/**
 
 provider:
   name: aws

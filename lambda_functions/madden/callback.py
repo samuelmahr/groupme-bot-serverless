@@ -8,6 +8,7 @@ import string
 import boto3
 import requests
 
+
 BOT_ID = os.environ['BOT_ID']
 BOT_POSTS_TABLE_NAME = os.environ['BOT_POSTS_TABLE_NAME']
 BOT_POSTS_TABLE = boto3.resource('dynamodb').Table(BOT_POSTS_TABLE_NAME)
@@ -18,13 +19,14 @@ LOGGER.setLevel(logging.INFO)
 
 def handler(event, context):
     request_payload = json.loads(event['body'])
+    LOGGER.info(f'Message: {request_payload}')
     if request_payload['sender_id'] == '6997876':
-        return handle_detroit(request_payload)
+        return handle_brian(request_payload)
 
     return {'message': 'do nothing, it aint brian'}
 
 
-def handle_detroit(request_payload):
+def handle_brian(request_payload):
     incoming_text = request_payload.get('text', '')
     LOGGER.info(f'Message: {request_payload}')
     outgoing_text = find_outgoing_text(incoming_text, request_payload)
@@ -106,7 +108,7 @@ def save_to_dynamo(incoming_text, outgoing_text):
     LOGGER.info('Saving message')
     BOT_POSTS_TABLE.put_item(Item={
         'date': datetime.datetime.now().isoformat(),
-        'group': 'basketball',
+        'group': 'madden',
         'incoming_text': incoming_text,
         'outgoing_text': outgoing_text
     })

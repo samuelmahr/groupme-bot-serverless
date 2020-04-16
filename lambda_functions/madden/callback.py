@@ -63,7 +63,7 @@ def handle_text_files(request_payload: dict, text_file: str) -> dict:
         LOGGER.info('sending message')
         payload = {
             "bot_id": BOT_ID,
-            "text": f'What Detroit is really saying is...\n\n{outgoing_text}'
+            "text": text
         }
 
         headers = {

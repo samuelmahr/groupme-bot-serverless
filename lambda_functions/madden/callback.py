@@ -19,15 +19,43 @@ LOGGER.setLevel(logging.INFO)
 
 
 def handler(event, context):
+    if event.get('source') == 'aws.events':
+        return handle_scheduled_event()
+
+    return handle_api_event(event)
+
+
+def handle_scheduled_event():
+    lines = list()
+    incoming_text = "scheduled event"
+    with open(f'phrases/madden_cloudwatch.txt', 'r') as phrases_file:
+        lines.extend(phrases_file.readlines())
+    text = lines[random.choice(lines)]
+    post_to_group_and_save(incoming_text, text)
+    return {'message': ''}
+
+
+def post_to_group_and_save(incoming_text, outgoing_text):
+    payload = {
+        "bot_id": BOT_ID,
+        "text": outgoing_text
+    }
+    headers = {
+        'Content-Type': 'application/json'
+    }
+    response = requests.post(GROUPME_URL, headers=headers, json=payload)
+    response.raise_for_status()
+    save_to_dynamo(incoming_text, outgoing_text)
+
+
+def handle_api_event(event):
     request_payload = json.loads(event['body'])
     LOGGER.info(f'Message: {request_payload}')
     sender_id = request_payload['sender_id']
     if sender_id == '26901603':
         return copy_paste_message(request_payload)
-
     if sender_id == '6997876':
         return handle_text_files(request_payload, 'brian.txt')
-
     return handle_text_files(request_payload, 'madden.txt')
 
 
@@ -36,19 +64,7 @@ def copy_paste_message(request_payload: dict) -> dict:
     # it could be random.choice([1, 2, 3]) == 3 but i didn't feel like doing that
     if random.choice([1, 2, 3, 4, 5, 6]) % 3 == 0:
         incoming_text = request_payload.get('text', '')
-        payload = {
-            "bot_id": BOT_ID,
-            "text": incoming_text
-        }
-
-        headers = {
-            'Content-Type': 'application/json'
-        }
-
-        response = requests.post(GROUPME_URL, headers=headers, json=payload)
-        response.raise_for_status()
-
-        save_to_dynamo(incoming_text, incoming_text)
+        post_to_group_and_save(incoming_text, incoming_text)
         return {'message': 'copied message'}
 
     return {'message': 'did not copy message'}
@@ -60,21 +76,7 @@ def handle_text_files(request_payload: dict, text_file: str) -> dict:
     outgoing_text = find_outgoing_text(incoming_text, request_payload, text_file)
     if outgoing_text:
         text = outgoing_text if text_file != 'brian.txt' else f'What Detroit is really saying is...\n\n{outgoing_text}'
-        LOGGER.info('sending message')
-        payload = {
-            "bot_id": BOT_ID,
-            "text": text
-        }
-
-        headers = {
-            'Content-Type': 'application/json'
-        }
-
-        response = requests.post(GROUPME_URL, headers=headers, json=payload)
-        response.raise_for_status()
-
-        save_to_dynamo(incoming_text, outgoing_text)
-
+        post_to_group_and_save(incoming_text, text)
         return {'message': 'translated the phrase'}
 
     return {'message': 'no phrase found to translate'}

@@ -1,33 +1,11 @@
 ---
-callback:
-  handler: lambda_functions/basketball/callback.handler
-  description: callback to read groupme post
-  environment:
-    BOT_POSTS_TABLE_NAME:
-      Ref: AllBotPosts
-    BOT_ID: ${opt:basketball-bot-id}
-    GROUPME_URL: 'https://api.groupme.com/v3/bots/post'
-  events:
-    - http:
-        path: groupme/basketball/callback
-        method: post
-  memorySize: 128
-  timeout: 15
-  role:
-    Fn::GetAtt: [BotLambdaRole, Arn]
-  layers:
-    - {Ref: PythonRequirementsLambdaLayer}
-  package:
-    include:
-      - lambda_functions/basketball/callback.py
-
 proam-callback:
   handler: lambda_functions/proam/callback.handler
   description: callback to read groupme post
   environment:
     BOT_POSTS_TABLE_NAME:
       Ref: AllBotPosts
-    BOT_ID: ${opt:proam-bot-id}
+    BOT_ID: 1cb7428c18c516f719d909030e
     GROUPME_URL: 'https://api.groupme.com/v3/bots/post'
   events:
     - http:
@@ -42,29 +20,4 @@ proam-callback:
   package:
     include:
       - lambda_functions/proam/callback.py
-      - phrases/brian.txt
-
-madden-callback:
-  handler: lambda_functions/madden/callback.handler
-  description: callback to read groupme post
-  environment:
-    BOT_POSTS_TABLE_NAME:
-      Ref: AllBotPosts
-    BOT_ID: ${opt:madden-bot-id}
-    GROUPME_URL: 'https://api.groupme.com/v3/bots/post'
-  events:
-    - http:
-        path: groupme/madden/callback
-        method: post
-    - schedule: rate(18 hours)
-  memorySize: 128
-  timeout: 15
-  role:
-    Fn::GetAtt: [BotLambdaRole, Arn]
-  layers:
-    - {Ref: PythonRequirementsLambdaLayer}
-  package:
-    include:
-      - lambda_functions/madden/callback.py
-      - phrases/madden.txt
       - phrases/brian.txt

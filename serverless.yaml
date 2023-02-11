@@ -19,7 +19,7 @@ package:
 
 provider:
   name: aws
-  runtime: python3.7
+  runtime: python3.8
 
   stage: ${opt:stage, "prod"}
   region: us-east-1

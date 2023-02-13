@@ -5,7 +5,7 @@ proam-callback:
   environment:
     BOT_POSTS_TABLE_NAME:
       Ref: AllBotPosts
-    BOT_ID: 1cb7428c18c516f719d909030e
+    BOT_ID: 1efac177b1574075e44c75d59f
     GROUPME_URL: 'https://api.groupme.com/v3/bots/post'
   events:
     - http:
